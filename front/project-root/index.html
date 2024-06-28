@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Development Environment UI</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script  defer src = "script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 class="text-2xl font-bold mb-4 text-center">Development Environment UI</h1>
+    </header>
+    <main class="grid-container">
+      <div class="grid-row">
+        <div id="run-configs" class="grid-item run-configs">
+          <h2 class="section-title">RUN CONFIGS</h2>
+          <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
+          <div class="config-item text-center">
+            <button class="rounded-button blue-button">USE HTML (BROWSER)</button>
+            <button class="rounded-button pink-button">IN USE: HTML</button>
+            <button class="rounded-button blue-button">USE NODE (CONSOLE)</button>
+            <button class="rounded-button pink-button">IN USE: INDEX.HTML</button>
+          </div>
+          <div class="folder-container">
+            <div class="folder-left">
+              <p>&#8627; Folder: Foo</p>
+              <p class="ml-4">&#8627; Folder: Bar</p>
+              <p class="ml-8">&#8627; File: index.html <input type="checkbox" checked disabled></p>
+            </div>
+            <div class="folder-right">
+              <p>&#8627; Folder: Foo</p>
+              <p class="ml-4">&#8627; Folder: Bar</p>
+              <p class="ml-8">&#8627; File: index.js <input type="checkbox" checked disabled></p>
+            </div>
+          </div>
+        </div>
+        <div id="terminal" class="grid-item terminal text-center">
+          <h2 class="section-title">TERMINAL</h2>
+          <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
+          <p class="mb-2">Command: <code>echo “hello”</code><br>Result: echo</p>
+          <p class="mb-2">Command: <code>pwd</code><br>Result: /usr/foo.bar/dev</p>
+          <p class="mb-2">Command: rename file <code>foo.html index.html</code><br>Result: foo.html file renamed to index.html</p>
+          <div class="actions flex justify-center mt-4">
+            <button id="idebutton" class="rounded-button blue-button">IDE ACTION</button>
+            <button class="rounded-button blue-button">EXECUTE</button>
+          </div>
+        </div>
+        <div id="code" class="grid-item code">
+          <h2 class="section-title">CODE</h2>
+          <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
+          <pre class="bg-gray-100 p-4 rounded"><code>
+<span class="text-red-500">1 x = 7</span>
+<span class="text-purple-500">2 y = 6</span>
+<span class="text-blue-500">3 z = 6 * 7</span>
+<span class="text-green-500">4 console.log(z)</span>
+          </code></pre>
+        </div>
+      </div>
+      <div class="grid-row">
+        <div id="git" class="grid-item git">
+          <h2 class="section-title">GIT</h2>
+          <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
+          <div class="folders text-left">
+            <p>&#8627; Folder: Foo</p>
+            <p class="ml-4">&#8627; Folder: Bar</p>
+            <p class="ml-8">&#8627; File: index.html <input type="checkbox"></p>
+            <p class="ml-8">&#8627; File: styles.css <input type="checkbox"></p>
+            <p class="ml-8">&#8627; File: README.md <input type="checkbox"></p>
+          </div>
+          <div class="commit-message mt-4">
+            <textarea placeholder="COMMIT MESSAGE" class="w-full p-2 border"></textarea>
+          </div>
+          <div class="tags mt-4 text-left">
+            <p>feat(index.html): added header <button class="rounded-button green-button">Add Tag</button></p>
+            <p>feat(styles.css): added styling to ... <button class="rounded-button green-button">Add Tag</button></p>
+            <p>feat(index.js): added reactive ... <button class="rounded-button green-button">Add Tag</button></p>
+            <p>fix(index.js): button now adds ... <button class="rounded-button green-button">Add Tag</button></p>
+          </div>
+          <div class="flex justify-between mt-4">
+            <button class="rounded-button blue-button">PUSH</button>
+          </div>
+        </div>
+        <div id="shortcuts" class="grid-item shortcuts text-center">
+          <h2 class="section-title">SHORTCUTS</h2>
+          <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
+          <button class="rounded-button pink-button shortcut-button">GENERAL SHORTCUTS</button>
+          <button class="rounded-button pink-button shortcut-button">REPEAT LAST AUDIO: SET TO R</button>
+          <button class="rounded-button pink-button shortcut-button">SKIP TO NEXT AUDIO: SET TO N</button>
+          <button class="rounded-button pink-button shortcut-button">GIT SHORTCUTS</button>
+          <button class="rounded-button pink-button shortcut-button">REPEAT LAST COMMIT</button>
+        </div>
+        <div id="debugger" class="grid-item debugger">
+          <h2 class="section-title">DEBUGGER</h2>
+          <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
+          <div class="flex justify-between mb-4">
+            <button class="rounded-button green-button">RESTART NORMAL</button>
+            <button class="rounded-button blue-button">NEXT LINE</button>
+            <button class="rounded-button green-button">RESTART DEBUGGER</button>
+            <button class="rounded-button blue-button">STEP INTO</button>
+          </div>
+          <div class="variables">
+            <p>foo: 7 <input type="text" class="border p-1 ml-2" value="7"><button class="rounded-button green-button">CHANGE</button></p>
+            <p>bar: "Yes" <input type="text" class="border p-1 ml-2" value="Yes"><button class="rounded-button green-button">CHANGE</button></p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="js/script.js"></script>
+</body>
+</html>
+

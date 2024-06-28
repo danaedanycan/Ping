@@ -1,0 +1,168 @@
+/* General Styles */
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f3f4f6;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Section Title */
+.section-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+/* Grid Layout */
+.grid-container {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 16px;
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.grid-item {
+  background: #e0e0e0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+/* Rounded Buttons */
+.rounded-button {
+  border-radius: 50px;
+  padding: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.blue-button {
+  background-color: #1d4ed8;
+  color: white;
+}
+
+.pink-button {
+  background-color: #ec4899;
+  color: white;
+}
+
+.yellow-button {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.green-button {
+  background-color: #10b981;
+  color: white;
+}
+
+/* Read Screen Button */
+.read-screen-button-top {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+/* Run Configs */
+.run-configs .config-item {
+  margin-bottom: 16px;
+}
+
+.folder-container {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid black;
+  margin-top: 16px;
+}
+
+.folder-left, .folder-right {
+  width: 45%;
+}
+
+/* Terminal */
+.terminal p {
+  margin-bottom: 8px;
+}
+
+/* Code */
+.code pre {
+  background-color: #f3f4f6;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+/* Git */
+.git .folders p {
+  margin: 4px 0;
+}
+
+.git .commit-message textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.git .tags p {
+  margin: 4px 0;
+}
+
+.git .tags button {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* Shortcuts */
+.shortcuts .shortcut-button {
+  background-color: #ec4899;
+  color: white;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+/* Debugger */
+.debugger .variables p {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.debugger .variables input {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+/* Text Colors */
+.text-red-500 { color: #ef4444; }
+.text-purple-500 { color: #8b5cf6; }
+.text-blue-500 { color: #3b82f6; }
+.text-green-500 { color: #10b981; }
+
+/* Preformatted Text */
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
