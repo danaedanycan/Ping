@@ -1,14 +1,19 @@
 package fr.epita.assistants.myide.presentation.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.epita.assistants.myide.domain.entity.CoreProject;
 import fr.epita.assistants.myide.domain.service.Projects;
+import fr.epita.assistants.myide.domain.service.UpdateRequest;
 import fr.epita.assistants.myide.utils.Logger;
+import jakarta.json.Json;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -88,7 +93,7 @@ public class MyIdeEndpoint {
         Projects test = new Projects();
         CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(path));
         if(proj instanceof CoreProject && proj!=null)
-            return Response.ok(proj.getRootNode().getPath()+"/pom.xml").build();
+            return Response.ok(proj.getRootNode().getPath()+"\\pom.xml").build();
 
         return Response.status(400, "impossible")
                 .build();
@@ -114,17 +119,20 @@ public class MyIdeEndpoint {
     @Path("/create/file")
     public Response createFile(String path) {
         File file = new File(path);
-        if (file.isFile()) {
-            String errorMessage = "Cannot create file.";
-            Logger.logError(errorMessage + " The path " + path);
+        try {
+            if (file.createNewFile()) {
+                Logger.log("The file is correctly created");
+                return Response.ok(path)
+                        .build();
+            }
+            String errorMessage = "The file "+path+" already exist";
+            Logger.logError(errorMessage );
             return Response.status(400, errorMessage)
-                    .header("Access-Control-Allow-Origin", "*")
                     .build();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        Logger.log("The file is correctly created");
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .build();
+
     }
 
     @POST
@@ -147,17 +155,20 @@ public class MyIdeEndpoint {
     @POST
     @Path("/delete/file")
     public Response deleteFile(String path) {
-        File file = new File(path);
-        if (!file.isFile()) {
-            String errorMessage = "Cannot delete file.";
-            Logger.logError(errorMessage + " The path " + path);
-            return Response.status(400, errorMessage)
-                    .header("Access-Control-Allow-Origin", "*")
+
+        if (!Files.exists(java.nio.file.Path.of(path))) {
+
+
+        }
+        try {
+            Files.delete(java.nio.file.Path.of(path));
+        } catch (IOException e) {
+            return Response.status(400, "File does not exist: " + path)
                     .build();
         }
-        Logger.log("The file is deleted.");
+        System.out.println("File deleted successfully.");
+
         return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
                 .build();
     }
 
@@ -200,8 +211,8 @@ public class MyIdeEndpoint {
 
     @POST
     @Path("/update")
-    public Response update(String path, int from, int to, String content) {
-        File file = new File(path);
+    public Response update(String JsonRequest) {
+        /*File file = new File(path);
         if (file.isFile()) {
             String message = "File is updated.";
             Logger.log(message + " The path " + path + " from " + from + " to " + to + " content " + content);
@@ -215,6 +226,28 @@ public class MyIdeEndpoint {
         return Response.status(400, errorMessage)
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
+    }*/
+        ObjectMapper objectMapper = new ObjectMapper();
+        UpdateRequest updateRequest = null;
+        try {
+            updateRequest = objectMapper.readValue(JsonRequest, UpdateRequest.class);
+        } catch (JsonProcessingException e) {
+            return Response.status(400, e.toString()).build();
+        }
+
+        String path = updateRequest.getPath();
+        String content = updateRequest.getContent();
+
+        if (!Files.exists(java.nio.file.Path.of(path))) {
+            return Response.status(400, "It's impossible to update a file that does not exist.").build();
+
+        }
+        try {
+            Files.write(java.nio.file.Path.of(path),content.getBytes());
+        } catch (IOException e) {
+            return Response.status(400, "It's impossible to update a file that does not exist.").build();
+        }
+        return Response.ok(path).build();
     }
 }
 
