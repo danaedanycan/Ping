@@ -32,7 +32,14 @@ public class CoreProject implements Project {
     {
         processes.add(process);
     }
-
+    public boolean hasAspect(Class<? extends Aspect> aspectClass) {
+        for (Aspect aspect : aspects) {
+            if (aspect.getClass().equals(aspectClass)) {
+                return true;
+            }
+        }
+        return false;
+    }
     public void addAsp(Aspect asp)
     {
         this.aspects.add(asp);

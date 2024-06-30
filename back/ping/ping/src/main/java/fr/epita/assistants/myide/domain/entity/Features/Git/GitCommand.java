@@ -2,6 +2,7 @@ package fr.epita.assistants.myide.domain.entity.Features.Git;
 
 import fr.epita.assistants.myide.domain.entity.*;
 import fr.epita.assistants.myide.domain.entity.Features.Feedback;
+import fr.epita.assistants.myide.domain.entity.classes.Credentials;
 import fr.epita.assistants.myide.utils.Logger;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -9,10 +10,11 @@ import org.eclipse.jgit.transport.*;
 
 import java.io.*;
 import java.nio.file.*;
-
+import java.util.Set;
 
 abstract public class GitCommand implements Feature {
     public Mandatory.Features.Git gitCommand;
+    protected Credentials cred = new Credentials();
 
     protected GitCommand(Mandatory.Features.Git git) {
         this.gitCommand = git;
@@ -22,25 +24,48 @@ abstract public class GitCommand implements Feature {
     public ExecutionReport execute(Project project, Object... params) {
         Feedback feedback = new Feedback();
         feedback.setValid(true);
-        if (gitCommand != null) {
+
+        if (gitCommand != null && cred.readFromFile("src/main/resources/credentials.txt")) {
             try {
-                if (gitCommand == Mandatory.Features.Git.ADD) {
-                    feedback = gitAdd(project, params);
-                }
-                if (gitCommand == Mandatory.Features.Git.PULL) {
-                    feedback = gitPull(project, params);
-                }
-                if (gitCommand == Mandatory.Features.Git.COMMIT) {
-                    feedback = gitCommit(project, params);
-                }
-                if (gitCommand == Mandatory.Features.Git.PUSH) {
-                    feedback = gitPush(project, params);
+                switch (gitCommand) {
+                    case ADD:
+                        feedback = gitAdd(project, params);
+                        break;
+                    case PULL:
+                        feedback = gitPull(project, params);
+                        break;
+                    case COMMIT:
+                        feedback = gitCommit(project, params);
+                        break;
+                    case PUSH:
+                        feedback = gitPush(project, params);
+                        break;
+                    case STATUS:
+                        feedback = gitStatus(project);
+                        break;
                 }
             } catch (IOException e) {
                 System.err.println("IOException" + e);
             } catch (GitAPIException e) {
                 System.err.println("GitAPIException" + e);
             }
+        }
+        return feedback;
+    }
+
+    protected Feedback gitStatus(Project project) {
+        Feedback feedback = new Feedback();
+        String root_node = project.getRootNode().getPath().toString();
+        File folder = new File(root_node, ".git");
+        try (org.eclipse.jgit.api.Git git = org.eclipse.jgit.api.Git.open(folder)) {
+            Status status = git.status().call();
+
+            Set<String> untrac = feedback.get_untracted();
+            untrac.addAll(status.getModified());
+            untrac.addAll(status.getUntracked());
+            feedback.set_untracted(untrac);
+        } catch (IOException | GitAPIException e) {
+            return null;
         }
         return feedback;
     }
@@ -70,18 +95,15 @@ abstract public class GitCommand implements Feature {
                     Logger.logError("File " + fileName + " cannot be added because it has not been updated since last commit.");
                     feedback.setValid(false);
                     continue;
-                }
-                else if (isUntracked) {
+                } else if (isUntracked) {
                     Logger.log("File " + fileName + " is currently untracked.");
-                }
-                else {
+                } else {
                     Logger.log("Modified file " + fileName + " will be added.");
                 }
                 add.addFilepattern(fileName);
             }
 
-            if (feedback.isSuccess())
-            {
+            if (feedback.isSuccess()) {
                 add.call();
             }
         } catch (Exception e) {
@@ -99,23 +121,21 @@ abstract public class GitCommand implements Feature {
 
         try (org.eclipse.jgit.api.Git git = org.eclipse.jgit.api.Git.open(directory_git.toFile())) {
             PullCommand pullCommand = git.pull();
+            pullCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(cred.getUsername(), cred.getKey()));
 
             PullResult result = pullCommand.call();
-
-
             if (result.isSuccessful()) {
-                Logger.log("pull works");
+                Logger.log("Pull works");
             } else {
-                Logger.log("pull does not work");
+                Logger.log("Pull does not work");
                 feedback.setValid(false);
             }
-        } catch(Exception e) {
-            Logger.logError("Repository " + directory_git + " cannot be openedNo such repository found.");
+        } catch (Exception e) {
+            Logger.logError("Repository " + directory_git + " cannot be opened. No such repository found.");
             feedback.setValid(false);
         }
         return feedback;
     }
-
 
     protected Feedback gitPush(Project project, Object... params) throws IOException, GitAPIException {
         Feedback feedback = new Feedback();
@@ -125,6 +145,8 @@ abstract public class GitCommand implements Feature {
 
         try (org.eclipse.jgit.api.Git git = org.eclipse.jgit.api.Git.open(path_to_git_at_root.toFile())) {
             PushCommand push = git.push();
+            push.setCredentialsProvider(new UsernamePasswordCredentialsProvider(cred.getUsername(), cred.getKey()));
+
             try {
                 Iterable<PushResult> feedback_push = push.call();
                 for (PushResult result : feedback_push) {
@@ -135,11 +157,11 @@ abstract public class GitCommand implements Feature {
                     }
                 }
             } catch (Exception e) {
-                Logger.logError("Cannot push to remoteAccess denied.");
+                Logger.logError("Cannot push to remote. Access denied.");
                 Logger.logError(e.toString());
                 feedback.setValid(false);
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             Logger.logError("Repository with path " + path_to_git_at_root + " not found.");
             feedback.setValid(false);
         }
@@ -166,7 +188,7 @@ abstract public class GitCommand implements Feature {
         }
         String commit_message = builder.toString();
         commit.setMessage(commit_message);
-        try{
+        try {
             commit.call();
         } catch (Exception e) {
             Logger.logError("Commit failed.");

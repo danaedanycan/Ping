@@ -15,6 +15,7 @@ public class GitAspect implements Aspect {
         return List.of(new GitAdd(),
                 new GitPull(),
                 new GitPush(),
-                new GitCommit());
+                new GitCommit(),
+                new GitStatus());
     }
 }

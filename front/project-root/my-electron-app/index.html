@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Development Environment UI</title>
   <link rel="stylesheet" href="css/styles.css">
-  <script  defer src = "script.js"></script>
+  <script defer src="script.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -15,6 +17,17 @@
     </header>
     <main class="grid-container">
       <div class="grid-row">
+        <div id="fullscreenDiv" class="fullscreen" >
+          <p>Vos credentials Git ne sont pas renseignés ou mal renseignés.</p>
+          <label for="identifiant">Identifiant :</label>
+          <input type="text" id="identifiant" name="identifiant">
+          
+          <label for="motDePasse">Mot de passe :</label>
+          <input type="password" id="motDePasse" name="motDePasse">
+
+          <button id="save_cred" class="rounded-button pink-button">Save</button>
+        </div>
+
         <div id="run-configs" class="grid-item run-configs">
           <h2 class="section-title">RUN CONFIGS</h2>
           <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
@@ -50,7 +63,7 @@
           <h2 class="section-title">CODE</h2>
           <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
           <pre class="bg-gray-100 p-4 rounded" style="width: 80%; height: 60%; "><code>
-            <h3 id="bonjour" style="margin: 0%;padding: 0%;">bilbique</h3>
+            <h3 id="bonjour" style="margin: 0%;padding: 0%;"></h3>
             <textarea type="text" id="code_data" style="width: 100%; height: 80%; margin: 0%;padding: 0%;"></textarea>
           </code></pre>
         </div>
@@ -59,24 +72,20 @@
         <div id="git" class="grid-item git">
           <h2 class="section-title">GIT</h2>
           <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
-          <div class="folders text-left">
-            <p>&#8627; Folder: Foo</p>
-            <p class="ml-4">&#8627; Folder: Bar</p>
-            <p class="ml-8">&#8627; File: index.html <input type="checkbox"></p>
-            <p class="ml-8">&#8627; File: styles.css <input type="checkbox"></p>
-            <p class="ml-8">&#8627; File: README.md <input type="checkbox"></p>
+          <div id="buttonContainer" class="folders text-left">
+
           </div>
           <div class="commit-message mt-4">
-            <textarea placeholder="COMMIT MESSAGE" class="w-full p-2 border"></textarea>
+            
           </div>
           <div class="tags mt-4 text-left">
-            <p>feat(index.html): added header <button class="rounded-button green-button">Add Tag</button></p>
-            <p>feat(styles.css): added styling to ... <button class="rounded-button green-button">Add Tag</button></p>
-            <p>feat(index.js): added reactive ... <button class="rounded-button green-button">Add Tag</button></p>
-            <p>fix(index.js): button now adds ... <button class="rounded-button green-button">Add Tag</button></p>
+            <textarea placeholder="COMMIT MESSAGE" class="w-full p-2 border"></textarea>
+
+            <textarea placeholder="TAG MESSAGE(optional)" class="w-full p-2 border"></textarea>
           </div>
           <div class="flex justify-between mt-4">
             <button class="rounded-button blue-button">PUSH</button>
+            <button class="rounded-button blue-button">COMMIT</button>
           </div>
         </div>
         <div id="shortcuts" class="grid-item shortcuts text-center">
@@ -98,13 +107,15 @@
             <button class="rounded-button blue-button">STEP INTO</button>
           </div>
           <div class="variables">
-            <p>foo: 7 <input type="text" class="border p-1 ml-2" value="7"><button class="rounded-button green-button">CHANGE</button></p>
-            <p>bar: "Yes" <input type="text" class="border p-1 ml-2" value="Yes"><button class="rounded-button green-button">CHANGE</button></p>
+            <p>foo: 7 <input type="text" class="border p-1 ml-2" value="7"><button
+                class="rounded-button green-button">CHANGE</button></p>
+            <p>bar: "Yes" <input type="text" class="border p-1 ml-2" value="Yes"><button
+                class="rounded-button green-button">CHANGE</button></p>
           </div>
         </div>
       </div>
     </main>
   </div>
 </body>
-</html>
 
+</html>

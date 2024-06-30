@@ -3,6 +3,14 @@ package fr.epita.assistants.myide.presentation.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.epita.assistants.myide.domain.entity.CoreProject;
+import fr.epita.assistants.myide.domain.entity.Feature;
+import fr.epita.assistants.myide.domain.entity.Features.Feedback;
+import fr.epita.assistants.myide.domain.entity.Features.Git.GitAdd;
+import fr.epita.assistants.myide.domain.entity.Features.Git.GitAspect;
+import fr.epita.assistants.myide.domain.entity.Features.Git.GitCommand;
+import fr.epita.assistants.myide.domain.entity.Features.Git.GitStatus;
+import fr.epita.assistants.myide.domain.entity.classes.Credentials;
+import fr.epita.assistants.myide.domain.service.AddClass;
 import fr.epita.assistants.myide.domain.service.Projects;
 import fr.epita.assistants.myide.domain.service.UpdateRequest;
 import fr.epita.assistants.myide.utils.Logger;
@@ -11,12 +19,10 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +39,71 @@ public class MyIdeEndpoint {
         Logger.log("Saying hello !");
         return Response.ok("Hello World !").build();
     }
+    @GET
+    @Path("/get/credentials")
+    public Response Get_credentials() {
+        String filePath = "src/main/resources/credentials.txt";
 
+        // Appel de la méthode pour lire les deux premières lignes
+        String[] result = readFile(filePath);
+        // Afficher le résultat
+        if (result != null) {
+            Credentials cred = new Credentials(result[0],result[1]);
+            return Response.ok(cred).build();
+        } else {
+            System.out.println("iciiiii");
+            return Response.status(400,"Their is not git credentials please set up them:").build();
+        }
+    }
+
+    public static String[] readFile(String filePath) {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(filePath));
+            String[] lines = new String[3];
+            lines[0] = reader.readLine();
+            lines[1] = reader.readLine();
+            lines[2] = reader.readLine();
+
+            // Check if there are more lines in the file
+            if (reader.readLine() != null) {
+                return null;
+            }
+
+            if (lines[0] != null && lines[1] != null && lines[2] != null) {
+                return lines;
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    @POST
+    @Path("/set/credentials")
+    public Response Set_credentials(String Jsonobj) {
+        String filePath = "src/main/resources/credentials.txt";
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            Credentials credentials = objectMapper.readValue(Jsonobj, Credentials.class);
+            credentials.writeToFile(filePath);
+            return Response.ok().build();
+
+        } catch (Exception e) {
+            System.out.println(e);
+            return  Response.status(400,"There is a probleme in the credentials saving").build();
+        }
+    }
     @POST
     @Path("/execute-command")
     public Response executeCommand(Map<String, String> request) {
@@ -87,17 +157,24 @@ public class MyIdeEndpoint {
 
     @POST
     @Path("/open/project")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public Response openProject(String path) {
+        try {
+            System.out.println("Received path: " + path);
 
-        System.out.println(path);
-        Projects test = new Projects();
-        CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(path));
-        if(proj instanceof CoreProject && proj!=null)
-            return Response.ok(proj.getRootNode().getPath()+"\\pom.xml").build();
+            Projects test = new Projects();
+            CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(path));
 
-        return Response.status(400, "impossible")
-                .build();
-//        return Response.ok().build();
+            if (proj instanceof CoreProject && proj != null && proj.getRootNode() != null) {
+                return Response.ok(proj.getRootNode().getPath()).build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Impossible de charger le projet.").build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Erreur interne lors du chargement du projet.").build();
+        }
     }
 
     @POST
@@ -122,7 +199,7 @@ public class MyIdeEndpoint {
         try {
             if (file.createNewFile()) {
                 Logger.log("The file is correctly created");
-                return Response.ok(path)
+                return Response.ok(file.getAbsolutePath())
                         .build();
             }
             String errorMessage = "The file "+path+" already exist";
@@ -138,19 +215,22 @@ public class MyIdeEndpoint {
     @POST
     @Path("/create/folder")
     public Response createFolder(String path) {
-        File file = new File(path);
-        if (file.isDirectory()) {
-            String errorMessage = "Cannot create folder.";
-            Logger.logError(errorMessage + " The path " + path);
-            return Response.status(400, errorMessage)
-                    .header("Access-Control-Allow-Origin", "*")
-                    .build();
+        if (!Files.exists(java.nio.file.Path.of(path))) {
+            try {
+                // Create the directory
+                Files.createDirectories(java.nio.file.Path.of(path));
+                System.out.println("Directory created successfully at " + java.nio.file.Path.of(path));
+                return Response.ok().build();
+            } catch (IOException e) {
+                return Response.status(400, "Failed to create directory: " + e.getMessage()).build();
+            }
+        } else {
+            System.out.println("Directory already exists at " + java.nio.file.Path.of(path));
+            return Response.status(400, "This Folder already exists.").build();
         }
-        Logger.log("The folder is correctly created");
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .build();
+
     }
+
 
     @POST
     @Path("/delete/file")
@@ -175,20 +255,33 @@ public class MyIdeEndpoint {
     @POST
     @Path("/delete/folder")
     public Response deleteFolder(String path) {
-        File file = new File(path);
-        if (!file.isDirectory()) {
-            String errorMessage = "Cannot delete folder.";
-            Logger.logError(errorMessage + " The path " + path);
-            return Response.status(400, errorMessage)
-                    .header("Access-Control-Allow-Origin", "*")
-                    .build();
+
+
+        File folder = new File(path);
+
+        try {
+            // Call a recursive method to delete the folder and its contents
+            deleteFolder(folder);
+        } catch (Exception e) {
+            return Response.status(400,"Failed to delete folder: " + e.getMessage()).build();
         }
-        Logger.log("The folder is deleted.");
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .build();
+        return Response.ok().build();
     }
 
+
+    private static void deleteFolder(File folder) throws Exception {
+        if (folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    deleteFolder(file);
+                }
+            }
+        }
+        if (!folder.delete()) {
+            throw new Exception("Failed to delete " + folder);
+        }
+    }
     @POST
     @Path("/execFeature")
     public Response execFeature(String feature, List<String> params, String project) {
@@ -198,35 +291,102 @@ public class MyIdeEndpoint {
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
     }
+    @POST
+    @Path("/execFeature/status")
+    public Response Gitstat(String project_path){
+        Projects test = new Projects();
+        CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(project_path));
+        if(proj instanceof CoreProject && proj!=null && proj.hasAspect(GitAspect.class)) {
+            GitStatus stat = new GitStatus();
+            Feedback feed = (Feedback) stat.execute(proj);
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                String res = mapper.writeValueAsString(feed.get_untracted());
+                return Response.ok(res).build();
+            } catch (JsonProcessingException e) {
+                return Response.status(400, "impossible")
+                        .build();
+            }
+
+        }
+        return Response.ok()
+                .build();
+//        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/execFeature/Gitadd")
+    public Response GitAdd(String project_path){
+
+        System.out.println(project_path);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            AddClass projectData = objectMapper.readValue(project_path, AddClass.class);
+
+            String currentProject = projectData.getCurrent_project();
+            String add = projectData.getAdd();
+            Projects test = new Projects();
+            CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(currentProject));
+            if(proj != null && proj.hasAspect(GitAspect.class)) {
+                GitAdd gitAdd = new GitAdd();
+                Feedback add_feedback = (Feedback) gitAdd.execute(proj,add);
+                if(add_feedback.isSuccess()){
+                    GitStatus stat = new GitStatus();
+                    Feedback feed = (Feedback) stat.execute(proj);
+                    ObjectMapper mapper = new ObjectMapper();
+                    try {
+                        String res = mapper.writeValueAsString(feed.get_untracted());
+                        return Response.ok(res).build();
+                    } catch (JsonProcessingException e) {
+                        return Response.status(400, "impossible")
+                                .build();
+                    }
+                }
+                else{
+                    return Response.status(400, "impossible")
+                            .build();
+                }
+
+            }
+            return Response.ok()
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(400, "impossible")
+                    .build();
+        }
+
+    }
 
     @POST
     @Path("/move")
-    public Response move(String src, String dst) {
-        String errorMessage = "Cannot move file";
-        Logger.log(errorMessage + " from " + src + " to " + dst);
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .build();
+    public Response move(String JsonRequest) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        UpdateRequest updateRequest = null;
+        try {
+            updateRequest = objectMapper.readValue(JsonRequest, UpdateRequest.class);
+        } catch (JsonProcessingException e) {
+            return Response.status(400, e.toString()).build();
+        }
+        String src = updateRequest.getPath();
+        String dst = updateRequest.getContent();
+        System.out.println(src+"\n"+dst);
+
+        try {
+            // Déplacer le fichier ou le dossier
+            Files.move(java.nio.file.Path.of(src), java.nio.file.Path.of(dst));
+        } catch (IOException e) {
+            System.out.println(e);
+            return Response.status(400,"Erreur lors du déplacement : " + e.getMessage() ).build();
+        }
+        return Response.ok("Déplacement réussi de " + src + " vers " + dst).build();
     }
 
     @POST
     @Path("/update")
     public Response update(String JsonRequest) {
-        /*File file = new File(path);
-        if (file.isFile()) {
-            String message = "File is updated.";
-            Logger.log(message + " The path " + path + " from " + from + " to " + to + " content " + content);
-            return Response.ok(message)
-                    .header("Access-Control-Allow-Origin", "*")
-                    .build();
-        }
 
-        String errorMessage = "Cannot update file.";
-        Logger.logError(errorMessage + " The path " + path + " from " + from + " to " + to + " content " + content);
-        return Response.status(400, errorMessage)
-                .header("Access-Control-Allow-Origin", "*")
-                .build();
-    }*/
         ObjectMapper objectMapper = new ObjectMapper();
         UpdateRequest updateRequest = null;
         try {
