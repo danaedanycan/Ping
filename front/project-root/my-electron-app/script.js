@@ -553,12 +553,28 @@ async function IDE_EXEC() {
 
 function exec(contentfile,filename) {
     const exts = filename.split(".")
-    const extension = exts[-1];
+    const extension = exts[exts.length -1];
     terminal_input.value+=filename+"\nf,erifn,eri   "+extension+"\n"
     if(extension==="js"){
-        terminal_input.value+="\nf,erifn,eri\n"
-        const output = document.getElementById("execute_result");
-        output.src = 'data:text/html;charset=utf-8,' + encodeURIComponent('<script>' + contentfile + '<\/script>');
+        try {
+            const originalConsoleLog = console.log;
+
+            // Rediriger console.log vers l'élément textarea
+            const outputTextarea = document.getElementById("execute_result");
+            console.log = function(...args) {
+                outputTextarea.value += args.join(" ") + "\n";
+            };
+        
+            // Exécuter le script
+            const executeScript = new Function(contentfile);
+            executeScript();
+        
+            // Restaurer la console originale
+            console.log = originalConsoleLog;
+        } catch (error) {
+            window.getElementById("execute_result").value += "\nErreur d'exécution du script : " + error.message + "\n";
+            
+        }
     }
     else if(extension==="html"){
         exec(`start "" "${filename}"`, (err) => {
