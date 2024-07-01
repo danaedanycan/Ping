@@ -9,95 +9,66 @@ const shortcutspanel = document.getElementById("shortcuts");
 const Commit_Button = document.getElementById("commit_button");
 const Push_Button = document.getElementById("push_button");
 const execute =  document.getElementById("execute_file")
+const fileList =  document.getElementById("fileList");
 let current_project = null;
 let to_add = [];
 
-<<<<<<< HEAD
-=======
-
 class ConfigWindow {
 
-  constructor(fileList) {
-    this.fileList = fileList;
-  }
+    constructor(fileList) {
+        this.fileList = fileList;
+    }
 
-  getFileList() {
-    return this.fileList;
-  }
+    getFileList() {
+        return this.fileList;
+    }
 
 }
 
 function displayProjectArchitecture(configWindow) {
-  for (const filePath of configWindow.getFileList()) {
-    const filePathHTML = document.createElement('li');
-    const filePathButtonHTML = document.createElement('button');
-    filePathButtonHTML.addEventListener("click", async () => {
-      await OpenFile(filePath);
-    })
-    filePathButtonHTML.innerHTML = filePath;
-    filePathHTML.appendChild(filePathButtonHTML);
-    fileList.appendChild(filePathHTML);
-  }
+    for (const filePath of configWindow.getFileList()) {
+        const filePathHTML = document.createElement('li');
+        const filePathButtonHTML = document.createElement('button');
+        filePathButtonHTML.addEventListener("click", async () => {
+            await OpenFile(filePath);
+        })
+        filePathButtonHTML.innerHTML = filePath;
+        filePathHTML.appendChild(filePathButtonHTML);
+        fileList.appendChild(filePathHTML);
+    }
+}
+async function Openproject(path) {
+    try {
+        const response = await fetch('http://localhost:8080/api/open/project', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: path
+        });
+        const result = await response.text();
+        if (response.ok) {
+            //terminal_input.value += "\n"+result;
+            const resultModified = result.replace(/\\/g, "\\\\");
+            //terminal_input.value += "\n" + resultModified;
+            const configWindow = new ConfigWindow(JSON.parse(resultModified));
+            displayProjectArchitecture(configWindow);
+            current_project = path;
+            terminal_input.value += "\n The project iss correctly open !\n";
+            alert("The project is correctly open !")
+            await GitStatus();
+        } else {
+            terminal_input.value += "\nyhtyhyt" + result+"\n";
+            alert(result);
+        }
+    } catch (error) {
+        terminal_input.value += "\nici" + error+"\n";
+        alert(error)
+    }
 }
 
 
-async function Openproject(path) {
-  try {
-    const response = await fetch('http://localhost:8080/api/open/project', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: path
-    });
-    const result = await response.text();
-    if (response.ok) {
-        const configWindow = new ConfigWindow(JSON.parse(result));
-        displayProjectArchitecture(configWindow);
-        current_project = path;
-        terminal_input.value += "\n The project is correctly open, we've charge the pom.xml file in the Code Windows for you.\n";
-        // try {
-        //   const response = await fetch('http://localhost:8080/api/execFeature/status', {
-        //     method: 'POST',
-        //     headers: {
-        //       'Content-Type': 'application/json'
-        //     },
-        //     body: path
-        //   });
-        //   const result = await response.text();
-        //   if (response.ok) {
-        //     let list;
-        //     try {
-        //       list = JSON.parse(result);
-        //   } catch (error) {
-        //       terminal_input.value+=("\nFailed to parse string as JSON:", error);
-        //   }
-        //   if (Array.isArray(list)) {
-        //     const buttonContainer = document.getElementById('buttonContainer');
-        //     list.forEach(item => {
-        //       const button = document.createElement('button');
-        //       button.textContent = item; // Le texte du bouton est l'élément de la liste
-        //       button.classList.add('btn'); // Ajouter une classe si nécessaire
-        //       button.addEventListener('click', () => {
-        //           Git_ADD(button.textContent)
-        //       });
-        //
-        //       buttonContainer.appendChild(button);
-        //   });
-        // } else {
-        //     terminal_input.value += ("The parsed result is not an array.");
-        // }
-        //
-        //
-        //   } else {
-        //     terminal_input.value += "\n"+result+"\n";
-        //   }
-        // } catch (error) {
-        //   terminal_input.value += "\n"+error+"\n";
-        // }
-    } else {
-      terminal_input.value += "\n"+path.concat("/pom.xml");
->>>>>>> 10a48502be3bb34fdeb147c1bc54d7c447fc30f4
+
 //requete git Status
 async function GitStatus() {
     try {
@@ -238,31 +209,7 @@ async function GitPush() {
 }
 
 //open a project and charge Files to add in GitWindow
-async function Openproject(path) {
-    try {
-        const response = await fetch('http://localhost:8080/api/open/project', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: path
-        });
-        const result = await response.text();
-        if (response.ok) {
 
-            current_project = path;
-            terminal_input.value += "\n The project is correctly open !\n";
-            alert("The project is correctly open !")
-            await GitStatus();
-        } else {
-            terminal_input.value += "\n" + result+"\n";
-            alert(result);
-        }
-    } catch (error) {
-        terminal_input.value += "\n" + error+"\n";
-        alert(error)
-    }
-}
 //open a File in CodeWindow
 async function OpenFile(path) {
     try {
@@ -565,11 +512,7 @@ async function IDE_EXEC() {
         else {
             terminal_input.value += "\n" + "I can't open a " + commands[1] + " Did you want to say 'open project [absolute_path]' ?\nOr maybe 'open file [absolute_path]'"
 
-<<<<<<< HEAD
         }
-=======
-          }
->>>>>>> 10a48502be3bb34fdeb147c1bc54d7c447fc30f4
 
         //pour créer
     } else if (commands[0] === "create") {
@@ -607,14 +550,13 @@ async function IDE_EXEC() {
     }
     terminal_input.value += "\n";
 }
-<<<<<<< HEAD
 
 function exec(contentfile,filename) {
-  const exts = filename.split(".")
+    const exts = filename.split(".")
     const extension = exts[-1];
     terminal_input.value+=filename+"\nf,erifn,eri   "+extension+"\n"
     if(extension==="js"){
-      terminal_input.value+="\nf,erifn,eri\n"
+        terminal_input.value+="\nf,erifn,eri\n"
         const output = document.getElementById("execute_result");
         output.src = 'data:text/html;charset=utf-8,' + encodeURIComponent('<script>' + contentfile + '<\/script>');
     }
@@ -628,31 +570,13 @@ function exec(contentfile,filename) {
         });
     }
 }
-=======
->>>>>>> 10a48502be3bb34fdeb147c1bc54d7c447fc30f4
 // actions
 document.addEventListener('DOMContentLoaded', async () => {
     // regarde si il y a des credentials
     let cred = await Get_credentials();
-<<<<<<< HEAD
-=======
-
-        console.log('JavaScript loaded');
-        fullscreenDiv.classList.remove('active');
-        // execute la shell command
-        shell.addEventListener('click', async function () {
-            const test = getLastLine();
-            exec_terminal(test);
-        });
-        //execute l'ide command
-        ideButton.addEventListener('click', async function () {
-            IDE_EXEC();
-        });
->>>>>>> 10a48502be3bb34fdeb147c1bc54d7c447fc30f4
 
     console.log('JavaScript loaded');
 
-<<<<<<< HEAD
     // execute la shell command
     shell.addEventListener('click', async function () {
         const test = getLastLine();
@@ -680,6 +604,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         //tag si il y a un messag dans tag
         exec(code_display.value,filename.innerHTML)
     });
+
     //Raccourcis
     document.addEventListener('keydown', function (event) {
         //Sauvegarde le fichier actuel dans CodeWindow
@@ -718,68 +643,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             event.preventDefault();
             CloseFile();
         }
+        //shortcut for the IDE_Button
+        if (event.ctrlKey && event.altKey && event.key === 'I'){
+            event.preventDefault();
+            ideButton.click();
+        }
+        //shortcut for Execute_Button
+        if (event.ctrlKey && event.altKey && event.key === 'E'){
+            event.preventDefault();
+            shell.click();
+        }
+        //shortcut for Push
+        if (event.ctrlKey && event.altKey && event.key === 'P'){
+            event.preventDefault();
+            Push_Button.click();
+        }
+        //shortcut for commit
+        if (event.ctrlKey && event.altKey && event.key === 'M'){
+            event.preventDefault();
+            Commit_Button.click();
+        }
     });
-=======
-      //Raccourcis
-        document.addEventListener('keydown', function (event) {
-            //Sauvegarde le fichier actuel dans CodeWindow
-            if (event.ctrlKey && event.key === 'S') {
-                const path = filename.innerHTML;
-                const content = code_display.value;
-                UpdateFile(path, content);
-            }
-            //Supprime le fichier actuel de Code Window
-            if (event.ctrlKey && event.key === 'D') {
-                event.preventDefault();
-                const path = filename.innerHTML;
-                DeleteFile(path)
-            }
-            //ouvre en grand CodeWindow
-            if (event.ctrlKey && event.shiftKey && event.key === 'C') {
-                event.preventDefault();
-                toggleFullScreen(codepanel);
-            }
-            //sort du plein écran
-            if (event.key === 'Escape') {
-                exitFullScreen();
-            }
-            //ouvre en grand Terminal Window
-            if (event.ctrlKey && event.shiftKey && event.key === 'T') {
-                event.preventDefault();
-                toggleFullScreen(terminalpanel);
-            }
-            //Ouvre en grand Shortcuts window
-            if (event.ctrlKey && event.shiftKey && event.key === 'S') {
-                event.preventDefault();
-                toggleFullScreen(shortcutspanel);
-            }
-            //ferme le fichier actuel dans Code Window
-            if (event.ctrlKey && event.key === 'K') {
-                event.preventDefault();
-                CloseFile();
-            }
-            //shortcut for the IDE_Button
-            if (event.ctrlKey && event.altKey && event.key === 'I'){
-                event.preventDefault();
-                ideButton.click();
-            }
-            //shortcut for Execute_Button
-            if (event.ctrlKey && event.altKey && event.key === 'E'){
-                event.preventDefault();
-                shell.click();
-            }
-            //shortcut for Push
-            if (event.ctrlKey && event.altKey && event.key === 'P'){
-                event.preventDefault();
-                Push_Button.click();
-            }
-            //shortcut for commit
-            if (event.ctrlKey && event.altKey && event.key === 'M'){
-                event.preventDefault();
-                Commit_Button.click();
-            }
-        });
->>>>>>> 10a48502be3bb34fdeb147c1bc54d7c447fc30f4
+
 
 
     //affiche le terminal par défault
