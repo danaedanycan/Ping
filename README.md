@@ -12,3 +12,5 @@ npm install --save-dev electron
 puis npm start
 
 avant de push, pensez à supprimer le dossier node_modules(ou le mettre dans le git ignore) !!!
+
+ci ceci marche v3
