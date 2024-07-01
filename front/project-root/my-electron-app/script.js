@@ -1,7 +1,10 @@
+const { shell } = require('electron');
+const { ipcRenderer } = require('electron');
+
 const ideButton = document.getElementById("idebutton");
 const code_display = document.getElementById("code_data");
 const terminal_input = document.getElementById("fileInput");
-const shell = document.getElementById("shell_command");
+const shell_ici = document.getElementById("shell_command");
 const filename = document.getElementById("bonjour");
 const codepanel = document.getElementById("code");
 const terminalpanel = document.getElementById("terminal");
@@ -12,6 +15,10 @@ const execute =  document.getElementById("execute_file")
 const fileList =  document.getElementById("fileList");
 let current_project = null;
 let to_add = [];
+
+async function showDialog(message) {
+    await ipcRenderer.invoke('show-dialog', message);
+  }
 
 class ConfigWindow {
 
@@ -55,15 +62,15 @@ async function Openproject(path) {
             displayProjectArchitecture(configWindow);
             current_project = path;
             terminal_input.value += "\n The project iss correctly open !\n";
-            alert("The project is correctly open !")
+            await showDialog("The project is correctly open !")
             await GitStatus();
         } else {
             terminal_input.value += "\nyhtyhyt" + result+"\n";
-            alert(result);
+            await showDialog(result);
         }
     } catch (error) {
         terminal_input.value += "\nici" + error+"\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 
@@ -86,7 +93,7 @@ async function GitStatus() {
                 list = JSON.parse(result);
             } catch (error) {
                 terminal_input.value += ("\nFailed to parse string as JSON:"+ error);
-                alert("\nFailed to parse string as JSON: "+ error)
+                await showDialog("\nFailed to parse string as JSON: "+ error)
             }
             if (Array.isArray(list)) {
                 const buttonContainer = document.getElementById('buttonContainer');
@@ -105,17 +112,17 @@ async function GitStatus() {
                 });
             } else {
                 terminal_input.value += ("The parsed result is not an array.");
-                alert("The parsed result is not an array.")
+                await showDialog("The parsed result is not an array.")
             }
 
 
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 
@@ -133,14 +140,14 @@ async function Git_ADD(path) {
         const result = await response.text();
         if (response.ok) {
             await GitStatus();
-            alert("ADD is succesfull We remove it from the files to add list.")
+            await showDialog("ADD is succesfull We remove it from the files to add list.")
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 //Commit, prends le message mess
@@ -155,14 +162,14 @@ async function GitCommit(commit_mess) {
         });
         const result = await response.text();
         if (response.ok) {
-            alert("Commit is Successfull ! You can Push !")
+            await showDialog("Commit is Successfull ! You can Push !")
         } else {
             terminal_input.value += "\efzfen" + result + "\n";
-            alert("Commit is not Successfull !")
+            await showDialog("Commit is not Successfull !")
         }
     } catch (error) {
         terminal_input.value += "\nggrr" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 //Git tag with the tag message commit_mess
@@ -177,14 +184,14 @@ async function GitTag(commit_mess) {
         });
         const result = await response.text();
         if (response.ok) {
-            alert("Commit is successfuly tag!")
+            await showDialog("Commit is successfuly tag!")
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 //push
@@ -198,13 +205,13 @@ async function GitPush() {
             body:current_project
         });
         if (response.ok) {
-            alert("Push is Successfull! Congratulation !")
+            await showDialog("Push is Successfull! Congratulation !")
         } else {
-            alert("Push isn't Successfull, maybe you need to PULL, or set correctly your git credentials")
+            await showDialog("Push isn't Successfull, maybe you need to PULL, or set correctly your git credentials")
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 
@@ -226,14 +233,14 @@ async function OpenFile(path) {
             if (response.ok) {
                 code_display.value = await response.text();
                 filename.innerHTML = result;
-                alert("File "+result+" is open in Code Window")
+                await showDialog("File "+result+" is open in Code Window")
             } else {
                 terminal_input.value += "\n" + result + "\n";
-                alert(result)
+                await showDialog(result)
             }
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
@@ -254,15 +261,15 @@ async function CreateFile(path) {
             await OpenFile(result);
             to_add.push(result);
             terminal_input.value += "\n The file is correctly created.\n";
-            alert("The file is correctly created.")
+            await showDialog("The file is correctly created.")
             await GitStatus();
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 //Delete a File and update files to add
@@ -280,18 +287,18 @@ async function DeleteFile(path) {
             filename.innerHTML = "";
             code_display.value = "";
             terminal_input.value += "\n The file is correctly deleted.\n"
-            alert("The file is correctly deleted.")
+            await showDialog("The file is correctly deleted.")
             if (to_add.find(path)) {
                 to_add = to_add.filter(item => item !== path)
             }
             await GitStatus();
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 //close A file from CodeWindow
@@ -313,15 +320,15 @@ async function UpdateFile(path, content) {
         const result = await response.text();
         if (response.ok) {
             terminal_input.value += '\n' + 'The file is correctly updated.\n'
-            alert("The file is correctly updated.")
+            await showDialog("The file is correctly updated.")
             await GitStatus();
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 }
 //create a new Folder
@@ -337,14 +344,14 @@ async function CreateFolder(path) {
         const result = await response.text();
         if (response.ok) {
             terminal_input.value += "\n The folder is correctly created.\n"
-            alert("The folder is correctly created.")
+            await showDialog("The folder is correctly created.")
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 
 }
@@ -361,15 +368,15 @@ async function DeleteFolder(path) {
         const result = await response.text();
         if (response.ok) {
             terminal_input.value += "\n The folder is correctly deleted.\n"
-            alert("The folder is correctly deleted.")
+            await showDialog("The folder is correctly deleted.")
             await GitStatus();
         } else {
             terminal_input.value += "\n" + result + "\n";
-            alert(result)
+            await showDialog(result)
         }
     } catch (error) {
         terminal_input.value += "\n" + error + "\n";
-        alert(error)
+        await showDialog(error)
     }
 
 }
@@ -526,7 +533,7 @@ async function IDE_EXEC() {
         }
         else {
             terminal_input.value += "\n" + "I can't create a " + commands[1] + " Did you want to say 'open folder [absolute_path]' ?\nOr maybe 'open file [absolute_path]'"
-            alert("I can't create a " + commands[1] + " Did you want to say 'open folder [absolute_path]' ?\nOr maybe 'open file [absolute_path]'")
+            await showDialog("I can't create a " + commands[1] + " Did you want to say 'open folder [absolute_path]' ?\nOr maybe 'open file [absolute_path]'")
         }
     }
     else if (commands[0] === "delete") {
@@ -557,33 +564,27 @@ function exec(contentfile,filename) {
     terminal_input.value+=filename+"\nf,erifn,eri   "+extension+"\n"
     if(extension==="js"){
         try {
-            const originalConsoleLog = console.log;
+     const originalConsoleLog = console.log;
 
-            // Rediriger console.log vers l'élément textarea
-            const outputTextarea = document.getElementById("execute_result");
-            console.log = function(...args) {
-                outputTextarea.value += args.join(" ") + "\n";
-            };
-        
-            // Exécuter le script
-            const executeScript = new Function(contentfile);
-            executeScript();
-        
-            // Restaurer la console originale
-            console.log = originalConsoleLog;
+    // Rediriger console.log vers l'élément textarea
+    const outputTextarea = document.getElementById("execute_result");
+    console.log = function(...args) {
+        outputTextarea.value += args.join(" ") + "\n";
+    };
+
+    // Exécuter le script
+    const executeScript = new Function(contentfile);
+    executeScript();
+
+    // Restaurer la console originale
+    console.log = originalConsoleLog;
         } catch (error) {
             window.getElementById("execute_result").value += "\nErreur d'exécution du script : " + error.message + "\n";
             
         }
     }
     else if(extension==="html"){
-        exec(`start "" "${filename}"`, (err) => {
-            if (err) {
-                alert('Erreur lors de l\'ouverture du fichier:'+err);
-            } else {
-                alert('Fichier ouvert avec succès');
-            }
-        });
+        shell.openItem(filename);
     }
 }
 // actions
@@ -594,7 +595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('JavaScript loaded');
 
     // execute la shell command
-    shell.addEventListener('click', async function () {
+    shell_ici.addEventListener('click', async function () {
         const test = getLastLine();
         await exec_terminal(test);
     });
