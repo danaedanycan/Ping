@@ -596,6 +596,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 event.preventDefault();
                 CloseFile();
             }
+            //shortcut for the IDE_Button
+            if (event.ctrlKey && event.altKey && event.key === 'I'){
+                event.preventDefault();
+                ideButton.click();
+            }
+            //shortcut for Execute_Button
+            if (event.ctrlKey && event.altKey && event.key === 'E'){
+                event.preventDefault();
+                shell.click();
+            }
+            //shortcut for Push
+            if (event.ctrlKey && event.altKey && event.key === 'P'){
+                event.preventDefault();
+                Push_Button.click();
+            }
+            //shortcut for commit
+            if (event.ctrlKey && event.altKey && event.key === 'M'){
+                event.preventDefault();
+                Commit_Button.click();
+            }
         });
 
 
