@@ -4,8 +4,12 @@ import fr.epita.assistants.myide.domain.entity.Features.Any.Any;
 import fr.epita.assistants.myide.domain.entity.Nodes.FolderNode;
 import fr.epita.assistants.myide.utils.Logger;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CoreProject implements Project {
     public Node rootNode = null;
@@ -43,6 +47,33 @@ public class CoreProject implements Project {
     public void addAsp(Aspect asp)
     {
         this.aspects.add(asp);
+    }
+
+    private List<String> getFileArchitectureRec(File root) {
+        List<String> fileList = new ArrayList<>();
+        if (root.isDirectory() && root.listFiles() != null) {
+            for (File file : root.listFiles()) {
+                fileList.addAll(getFileArchitectureRec(file));
+            }
+        } else if (!root.isDirectory()) {
+            String doubleQuote = "\"";
+            fileList.add(doubleQuote.concat(root.getPath()).concat(doubleQuote));
+        }
+        return fileList;
+    }
+
+    public List<String> getFileArchitecture() {
+        if (rootNode == null) {
+            Logger.logError("No root found for project");
+            return new ArrayList<>();
+        }
+        File root = new File(rootNode.getPath().toString());
+        List<String> fileList = new ArrayList<>();
+        if (root.isDirectory())
+            return getFileArchitectureRec(root);
+        String doubleQuote = "\"";
+        fileList.add(doubleQuote.concat(root.getPath()).concat(doubleQuote));
+        return fileList;
     }
 
     @Override

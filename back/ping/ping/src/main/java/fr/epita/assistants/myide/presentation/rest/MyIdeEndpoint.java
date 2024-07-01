@@ -162,7 +162,7 @@ public class MyIdeEndpoint {
             CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(path));
 
             if (proj instanceof CoreProject && proj != null && proj.getRootNode() != null) {
-                return Response.ok(proj.getRootNode().getPath()).build();
+                return Response.ok(proj.getFileArchitecture()).build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST).entity("Impossible de charger le projet.").build();
             }
