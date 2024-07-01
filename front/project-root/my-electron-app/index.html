@@ -100,18 +100,22 @@
         <div id="debugger" class="grid-item debugger">
           <h2 class="section-title">DEBUGGER</h2>
           <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
-          <div class="flex justify-between mb-4">
+          <!-- <div class="flex justify-between mb-4">
             <button class="rounded-button green-button">RESTART NORMAL</button>
             <button class="rounded-button blue-button">NEXT LINE</button>
             <button class="rounded-button green-button">RESTART DEBUGGER</button>
             <button class="rounded-button blue-button">STEP INTO</button>
+          </div> -->
+          <div class="flex justify-between mb-4">
+            <button id="execute_file" class="rounded-button green-button">Exec current File</button>
+            <iframe id = "execute_result" class="w-full p-2 border"></iframe>
           </div>
-          <div class="variables">
+          <!-- <div class="variables">
             <p>foo: 7 <input type="text" class="border p-1 ml-2" value="7"><button
                 class="rounded-button green-button">CHANGE</button></p>
             <p>bar: "Yes" <input type="text" class="border p-1 ml-2" value="Yes"><button
                 class="rounded-button green-button">CHANGE</button></p>
-          </div>
+          </div> -->
         </div>
       </div>
     </main>
