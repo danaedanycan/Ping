@@ -81,6 +81,15 @@ body {
   margin-bottom: 16px;
 }
 
+.run-configs ul {
+  list-style-type: "↳";
+  overflow-y: scroll;
+  height: 200px;
+  width: 400px;
+  border: 1px solid black;
+}
+
+
 .folder-container {
   display: flex;
   justify-content: space-between;
@@ -96,6 +105,7 @@ body {
 .terminal p {
   margin-bottom: 8px;
 }
+
 
 /* Code */
 .code pre {
