@@ -1,6 +1,7 @@
 const ideButton = document.getElementById("idebutton");
 const code_display = document.getElementById("code_data");
 const terminal_input = document.getElementById("fileInput");
+const fileList = document.getElementById("fileList");
 const shell = document.getElementById("shell_command");
 const filename = document.getElementById("bonjour");
 const codepanel = document.getElementById("code");
@@ -10,6 +11,31 @@ const shortcutspanel = document.getElementById("shortcuts");
 let current_project = null;
 let to_add = [];
 
+
+class ConfigWindow {
+
+  constructor(fileList) {
+    this.fileList = fileList;
+  }
+
+  getFileList() {
+    return this.fileList;
+  }
+
+}
+
+function displayProjectArchitecture(configWindow) {
+  for (const filePath of configWindow.getFileList()) {
+    const filePathHTML = document.createElement('li');
+    const filePathButtonHTML = document.createElement('button');
+    filePathButtonHTML.addEventListener("click", async () => {
+      await OpenFile(filePath);
+    })
+    filePathButtonHTML.innerHTML = filePath;
+    filePathHTML.appendChild(filePathButtonHTML);
+    fileList.appendChild(filePathHTML);
+  }
+}
 
 
 async function Openproject(path) {
@@ -23,50 +49,51 @@ async function Openproject(path) {
     });
     const result = await response.text();
     if (response.ok) {
-
+        const configWindow = new ConfigWindow(JSON.parse(result));
+        displayProjectArchitecture(configWindow);
         current_project = path;
         terminal_input.value += "\n The project is correctly open, we've charge the pom.xml file in the Code Windows for you.\n";
-        try {
-          const response = await fetch('http://localhost:8080/api/execFeature/status', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: path
-          });
-          const result = await response.text();
-          if (response.ok) {
-            let list;
-            try {
-              list = JSON.parse(result);
-          } catch (error) {
-              terminal_input.value+=("\nFailed to parse string as JSON:", error);
-          }
-          if (Array.isArray(list)) {
-            const buttonContainer = document.getElementById('buttonContainer');
-            list.forEach(item => {
-              const button = document.createElement('button');
-              button.textContent = item; // Le texte du bouton est l'élément de la liste
-              button.classList.add('btn'); // Ajouter une classe si nécessaire
-              button.addEventListener('click', () => {
-                  Git_ADD(button.textContent)
-              });
-      
-              buttonContainer.appendChild(button);
-          });
-        } else {
-            terminal_input+=("The parsed result is not an array.");
-        }
- 
-              
-          } else {
-            terminal_input.value += "\n"+result+"\n";
-          }
-        } catch (error) {
-          terminal_input.value += "\n"+error+"\n";
-        }
+        // try {
+        //   const response = await fetch('http://localhost:8080/api/execFeature/status', {
+        //     method: 'POST',
+        //     headers: {
+        //       'Content-Type': 'application/json'
+        //     },
+        //     body: path
+        //   });
+        //   const result = await response.text();
+        //   if (response.ok) {
+        //     let list;
+        //     try {
+        //       list = JSON.parse(result);
+        //   } catch (error) {
+        //       terminal_input.value+=("\nFailed to parse string as JSON:", error);
+        //   }
+        //   if (Array.isArray(list)) {
+        //     const buttonContainer = document.getElementById('buttonContainer');
+        //     list.forEach(item => {
+        //       const button = document.createElement('button');
+        //       button.textContent = item; // Le texte du bouton est l'élément de la liste
+        //       button.classList.add('btn'); // Ajouter une classe si nécessaire
+        //       button.addEventListener('click', () => {
+        //           Git_ADD(button.textContent)
+        //       });
+        //
+        //       buttonContainer.appendChild(button);
+        //   });
+        // } else {
+        //     terminal_input.value += ("The parsed result is not an array.");
+        // }
+        //
+        //
+        //   } else {
+        //     terminal_input.value += "\n"+result+"\n";
+        //   }
+        // } catch (error) {
+        //   terminal_input.value += "\n"+error+"\n";
+        // }
     } else {
-      terminal_input.value += "\n"+result;
+      terminal_input.value += "\n"+path.concat("/pom.xml");
     }
   } catch (error) {
     terminal_input.value = error;
@@ -112,7 +139,7 @@ async function Git_ADD(path){
             buttonContainer.appendChild(button);
         });
       } else {
-          terminal_input+=("The parsed result is not an array.");
+          terminal_input.value +=("The parsed result is not an array.");
       }
 
             
@@ -191,7 +218,7 @@ async function DeleteFile(path) {
     if (response.ok) {
         filename.innerHTML="";
         code_display.value="";
-        terminal_input+="\n The file is correctly deleted.\n"
+        terminal_input.value +="\n The file is correctly deleted.\n"
         if(to_add.find(path))
           {
             to_add = to_add.filter(item => item !== path)
@@ -219,7 +246,7 @@ async function UpdateFile(path, content) {
     });
     const result = await response.text();
     if (response.ok) {
-      terminal_input+='\n'+'The file is correctly updated.\n' 
+      terminal_input.value +='\n'+'The file is correctly updated.\n'
     } else {
       terminal_input.value += "\n" + result + "\n";
     }
@@ -280,7 +307,7 @@ async function Move(src,dst){
     });
     const result = await response.text();
     if (response.ok) {
-      terminal_input+='\n'+'The file is correctly updated.\n'
+      terminal_input.value +='\n'+'The file is correctly updated.\n'
       if(filename.innerHTML==src){
         CloseFile();
       } 
@@ -413,7 +440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         OpenFile(commands[2]);
       }
       else{
-        terminal_input+="\n"+"I can't open a "+commands[1]+" Did you want to say 'open project [absolute_path]' ?\nOr maybe 'open file [absolute_path]'"
+        terminal_input.value +="\n"+"I can't open a "+commands[1]+" Did you want to say 'open project [absolute_path]' ?\nOr maybe 'open file [absolute_path]'"
       }
     } else if (commands[0] === "create") {
       if (commands[1] === "file") {
@@ -423,7 +450,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         CreateFolder(commands[2]);
       }
       else{
-        terminal_input+="\n"+"I can't create a "+commands[1]+" Did you want to say 'open folder [absolute_path]' ?\nOr maybe 'open file [absolute_path]'"
+        terminal_input.value +="\n"+"I can't create a "+commands[1]+" Did you want to say 'open folder [absolute_path]' ?\nOr maybe 'open file [absolute_path]'"
 
       }
     }
@@ -436,7 +463,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       
       else{
-        terminal_input+="\n"+"I can't delete a "+commands[1]+" Did you want to say 'open folder [absolute_path]' ?\nOr maybe 'open file [absolute_path]'"
+        terminal_input.value +="\n"+"I can't delete a "+commands[1]+" Did you want to say 'open folder [absolute_path]' ?\nOr maybe 'open file [absolute_path]'"
 
       }
     }
@@ -445,10 +472,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     else {
 
-      terminal_input+="\n I dont' know this command, if you want to to know available commands enter 'help' and click on Ide Action"
+      terminal_input.value +="\n I dont' know this command, if you want to to know available commands enter 'help' and click on Ide Action"
 
     }
-    terminal_input+="\n"
+    terminal_input.value +="\n"
   });
   document.addEventListener('keydown', function (event) {
 
