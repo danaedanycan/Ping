@@ -3,6 +3,7 @@ package fr.epita.assistants.myide.domain.entity.classes;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.epita.assistants.myide.domain.service.EncryptionUtils;
+import fr.epita.assistants.myide.utils.Logger;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -32,6 +33,7 @@ public class Credentials {
         this.identifiant = id;
         setKey(key); // Encrypt and set the key
     }
+
     // Getters and setters
     public String getUsername() {
         return identifiant;
@@ -43,6 +45,7 @@ public class Credentials {
 
     public String getKey() {
         try {
+            Logger.log(EncryptionUtils.decrypt(this.key, secretKey));
             return EncryptionUtils.decrypt(this.key, secretKey);
         } catch (Exception e) {
             e.printStackTrace();
@@ -64,8 +67,7 @@ public class Credentials {
             writer.newLine();
             writer.write(this.key); // write encrypted key
             writer.newLine();
-            writer.write(Base64.getEncoder().encodeToString(secretKey.getEncoded()));
-
+            writer.write(EncryptionUtils.getBase64StringFromKey(secretKey)); // write encoded secret key
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -79,7 +81,7 @@ public class Credentials {
 
             if (username != null && encryptedKey != null && encodedSecretKey != null) {
                 setUsername(username);
-                setKey(encryptedKey);
+                this.key = encryptedKey; // Directly set the encrypted key
                 setSecretKey(encodedSecretKey);
                 return true;
             } else {

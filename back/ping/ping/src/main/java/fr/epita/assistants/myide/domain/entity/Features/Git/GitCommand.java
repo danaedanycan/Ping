@@ -43,6 +43,9 @@ abstract public class GitCommand implements Feature {
                     case STATUS:
                         feedback = gitStatus(project);
                         break;
+                    case TAG:
+                        feedback = gitTag(project);
+                        break;
                 }
             } catch (IOException e) {
                 System.err.println("IOException" + e);
@@ -52,6 +55,7 @@ abstract public class GitCommand implements Feature {
         }
         return feedback;
     }
+
 
     protected Feedback gitStatus(Project project) {
         Feedback feedback = new Feedback();
@@ -137,37 +141,81 @@ abstract public class GitCommand implements Feature {
         return feedback;
     }
 
-    protected Feedback gitPush(Project project, Object... params) throws IOException, GitAPIException {
+    public Feedback gitPush(Project project, Object... params) throws IOException, GitAPIException {
         Feedback feedback = new Feedback();
         feedback.setValid(true);
 
-        Path path_to_git_at_root = Paths.get(project.getRootNode().getPath().toString(), ".git");
+        Path pathToGitAtRoot = Paths.get(project.getRootNode().getPath().toString(), ".git");
 
-        try (org.eclipse.jgit.api.Git git = org.eclipse.jgit.api.Git.open(path_to_git_at_root.toFile())) {
+        try (Git git = Git.open(pathToGitAtRoot.toFile())) {
+            Logger.log("user:"+cred.getUsername()+"\nmdp:"+cred.getKey());
             PushCommand push = git.push();
             push.setCredentialsProvider(new UsernamePasswordCredentialsProvider(cred.getUsername(), cred.getKey()));
 
             try {
-                Iterable<PushResult> feedback_push = push.call();
-                for (PushResult result : feedback_push) {
-                    if (!result.getMessages().isEmpty() && result.getMessages().contains("rejected")) {
-                        Logger.logError("Push was unsuccessful");
-                        Logger.logError(result.getMessages());
-                        feedback.setValid(false);
+                Iterable<PushResult> feedbackPush = push.call();
+                for (PushResult result : feedbackPush) {
+                    String messages = result.getMessages();
+                    if (messages != null && !messages.isEmpty()) {
+                        if (messages.contains("rejected")) {
+                            Logger.logError("Push was unsuccessful");
+                            Logger.logError(messages);
+                            feedback.setValid(false);
+                        } else {
+                            Logger.log("Push result messages: " + messages);
+                        }
                     }
                 }
-            } catch (Exception e) {
-                Logger.logError("Cannot push to remote. Access denied.");
+            } catch (GitAPIException e) {
+                Logger.logError("Cannot push to remote. Access denied. ");
                 Logger.logError(e.toString());
                 feedback.setValid(false);
             }
         } catch (IOException e) {
-            Logger.logError("Repository with path " + path_to_git_at_root + " not found.");
+            Logger.logError("Repository with path " + pathToGitAtRoot + " not found.");
+            Logger.logError(e.toString());
             feedback.setValid(false);
         }
         return feedback;
     }
+    private Feedback gitTag(Project project, Object... params) {
+        Feedback feedback = new Feedback();
+        feedback.setValid(true);
 
+        org.eclipse.jgit.api.Git git;
+        try {
+            git = org.eclipse.jgit.api.Git.open(Paths.get(project.getRootNode().getPath().toString(), ".git").toFile());
+        } catch (Exception e) {
+            Logger.logError("Could not open repository.");
+            Logger.logError(e.toString());
+            feedback.setValid(false);
+            return feedback;
+        }
+
+        TagCommand tagCommand = git.tag();
+        StringBuilder builder = new StringBuilder();
+        for (Object param : params) {
+            builder.append(param.toString()).append(" ");
+        }
+        String tagName = builder.toString().trim();
+
+        if (tagName.isEmpty()) {
+            Logger.logError("Tag name is empty.");
+            feedback.setValid(false);
+            return feedback;
+        }
+
+        tagCommand.setName(tagName);
+        try {
+            tagCommand.call();
+        } catch (GitAPIException e) {
+            Logger.logError("Tagging failed.");
+            Logger.logError(e.toString());
+            feedback.setValid(false);
+        }
+
+        return feedback;
+    }
     protected Feedback gitCommit(Project project, Object... params) throws IOException, GitAPIException {
         Feedback feedback = new Feedback();
         feedback.setValid(true);
