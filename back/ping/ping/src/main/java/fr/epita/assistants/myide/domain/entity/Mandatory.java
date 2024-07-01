@@ -71,7 +71,8 @@ public enum Mandatory {
              */
             PUSH,
 
-            STATUS
+            STATUS,
+            TAG
         }
 
         /**

@@ -16,6 +16,7 @@ public class GitAspect implements Aspect {
                 new GitPull(),
                 new GitPush(),
                 new GitCommit(),
-                new GitStatus());
+                new GitStatus(),
+                new GitTag());
     }
 }

@@ -1,4 +1,4 @@
-package fr.epita.assistants.myide.domain.service;
+package fr.epita.assistants.myide.domain.service.Git;
 
 public class AddClass {
     private String current_project;

@@ -22,7 +22,7 @@
           <label for="identifiant">Identifiant :</label>
           <input type="text" id="identifiant" name="identifiant">
           
-          <label for="motDePasse">Mot de passe :</label>
+          <label for="Personal Access Token">Mot de passe :</label>
           <input type="password" id="motDePasse" name="motDePasse">
 
           <button id="save_cred" class="rounded-button pink-button">Save</button>
@@ -79,13 +79,13 @@
             
           </div>
           <div class="tags mt-4 text-left">
-            <textarea placeholder="COMMIT MESSAGE" class="w-full p-2 border"></textarea>
+            <textarea id="commit_message" placeholder="COMMIT MESSAGE" class="w-full p-2 border"></textarea>
 
-            <textarea placeholder="TAG MESSAGE(optional)" class="w-full p-2 border"></textarea>
+            <textarea id = "tag_message" placeholder="TAG MESSAGE(optional)" class="w-full p-2 border"></textarea>
           </div>
           <div class="flex justify-between mt-4">
-            <button class="rounded-button blue-button">PUSH</button>
-            <button class="rounded-button blue-button">COMMIT</button>
+            <button id="push_button"class="rounded-button blue-button">PUSH</button>
+            <button id="commit_button"class="rounded-button blue-button">COMMIT</button>
           </div>
         </div>
         <div id="shortcuts" class="grid-item shortcuts text-center">
