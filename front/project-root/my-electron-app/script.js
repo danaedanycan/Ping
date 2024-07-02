@@ -9,8 +9,10 @@ const filename = document.getElementById("bonjour");
 const codepanel = document.getElementById("code");
 const terminalpanel = document.getElementById("terminal");
 const shortcutspanel = document.getElementById("shortcuts");
+const archipanel = document.getElementById("run-configs");
 const Commit_Button = document.getElementById("commit_button");
 const Push_Button = document.getElementById("push_button");
+const Pull_Button = document.getElementById("pull_button");
 const execute =  document.getElementById("execute_file")
 const fileList =  document.getElementById("fileList");
 let current_project = null;
@@ -18,7 +20,7 @@ let to_add = [];
 
 async function showDialog(message) {
     await ipcRenderer.invoke('show-dialog', message);
-  }
+}
 
 class ConfigWindow {
 
@@ -33,15 +35,16 @@ class ConfigWindow {
 }
 
 function displayProjectArchitecture(configWindow) {
+    fileList.innerHTML = '';
     for (const filePath of configWindow.getFileList()) {
-        const filePathHTML = document.createElement('li');
+        //const filePathHTML = document.createElement('li');
         const filePathButtonHTML = document.createElement('button');
         filePathButtonHTML.addEventListener("click", async () => {
             await OpenFile(filePath);
         })
         filePathButtonHTML.innerHTML = filePath;
-        filePathHTML.appendChild(filePathButtonHTML);
-        fileList.appendChild(filePathHTML);
+        // filePathHTML.appendChild(filePathButtonHTML);
+        fileList.appendChild(filePathButtonHTML);
     }
 }
 async function Openproject(path) {
@@ -139,7 +142,8 @@ async function Git_ADD(path) {
         });
         const result = await response.text();
         if (response.ok) {
-            await GitStatus();
+            if(current_project!==null)
+                await GitStatus();
             await showDialog("ADD is succesfull We remove it from the files to add list.")
         } else {
             terminal_input.value += "\n" + result + "\n";
@@ -197,6 +201,7 @@ async function GitTag(commit_mess) {
 //push
 async function GitPush() {
     try {
+        await GitPull();
         const response = await fetch('http://localhost:8080/api/execFeature/Gitpush', {
             method: 'POST',
             headers: {
@@ -214,7 +219,25 @@ async function GitPush() {
         await showDialog(error)
     }
 }
-
+async function GitPull() {
+    try {
+        const response = await fetch('http://localhost:8080/api/execFeature/Gitpull', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body:current_project
+        });
+        if (response.ok) {
+            await showDialog("Pull is Successfull! Congratulation !")
+        } else {
+            await showDialog("Pull isn't Successfull, maybe you need to set correctly your git credentials")
+        }
+    } catch (error) {
+        terminal_input.value += "\n" + error + "\n";
+        await showDialog(error)
+    }
+}
 //open a project and charge Files to add in GitWindow
 
 //open a File in CodeWindow
@@ -262,7 +285,8 @@ async function CreateFile(path) {
             to_add.push(result);
             terminal_input.value += "\n The file is correctly created.\n";
             await showDialog("The file is correctly created.")
-            await GitStatus();
+            if(current_project!==null)
+                await GitStatus();
         } else {
             terminal_input.value += "\n" + result + "\n";
             await showDialog(result)
@@ -291,7 +315,8 @@ async function DeleteFile(path) {
             if (to_add.find(path)) {
                 to_add = to_add.filter(item => item !== path)
             }
-            await GitStatus();
+            if(current_project!==null)
+                await GitStatus();
         } else {
             terminal_input.value += "\n" + result + "\n";
             await showDialog(result)
@@ -306,7 +331,16 @@ function CloseFile() {
     code_display.value = ""
     filename.innerHTML = ""
 }
-
+function CloseProject(){
+    current_project = null;
+    fileList.innerHTML = "";
+    filename.value = "";
+    code_display.value = "";
+    to_add.innerHTML = "";
+    document.getElementById("execute_result").value="";
+    document.getElementById("commit_message").value="";
+    document.getElementById("tag_message").value=""
+}
 //Update a file and update files to add
 async function UpdateFile(path, content) {
     try {
@@ -321,7 +355,8 @@ async function UpdateFile(path, content) {
         if (response.ok) {
             terminal_input.value += '\n' + 'The file is correctly updated.\n'
             await showDialog("The file is correctly updated.")
-            await GitStatus();
+            if(current_project!==null)
+                await GitStatus();
         } else {
             terminal_input.value += "\n" + result + "\n";
             await showDialog(result)
@@ -369,7 +404,8 @@ async function DeleteFolder(path) {
         if (response.ok) {
             terminal_input.value += "\n The folder is correctly deleted.\n"
             await showDialog("The folder is correctly deleted.")
-            await GitStatus();
+            if(current_project!==null)
+                await GitStatus();
         } else {
             terminal_input.value += "\n" + result + "\n";
             await showDialog(result)
@@ -552,6 +588,56 @@ async function IDE_EXEC() {
     else if (commands[0] === "move") {
         await Move(commands[1], commands[2])
     }
+    else if(commands[0] === "git")
+    {
+        if(commands[1] === "add"){
+            await Git_ADD(commands[2]);
+        }
+        else  if(commands[1] === "commit"){
+            await GitCommit(commands[2]);
+        }
+        else  if(commands[1] === "push"){
+            await GitPush();
+        }
+        else if(commands[1] === "pull"){
+            await GitPull();
+        }
+        else if(commands[1] === "tag"){
+            await GitTag(commands[2])
+        }
+        else{
+            terminal_input.value+="\n I dont' know this command, if you want to to know available commands enter 'help' and click on Ide Action"
+        }
+    }
+    else if(commands[0] === "close")
+    {
+        if(commands[1]==="project"){
+            CloseProject();
+        }
+        else if(commands[1]==="file"){
+            CloseFile();
+        }
+    }
+    else if (commands[0] === "help"){
+        terminal_input.value +=
+            "\nAvailables commands are :\n" +
+            "   - 'open project [absolute_project_path]'\n"+
+            "   - 'open file [absolute_file_path]'\n\n"+
+            "   - 'create file [absolute_file_path]'\n"+
+            "   - 'create folder [absolute_folder_path]'\n\n"+
+            "   - 'delete file [absolute_file_path]'\n"+
+            "   - 'delete folder [absolute_folder_path]'\n\n"+
+            "   - 'move [src_absolute_folder_or_file_path] [dst_folder_path]'\n\n"+
+            "   - 'git add [absolute_path]'\n"+
+            "   - 'git commit [commit_message]'\n"+
+            "   - 'git push'\n"+
+            "   - 'git  pull'\n"+
+            "   - 'git tag [tag_message]'\n\n"+
+            "   - 'close project' close the current project\n"+
+        "   - 'close file' close the in The Code Window\n\n"
+
+
+    }
     else {
         terminal_input.value += "\n I dont' know this command, if you want to to know available commands enter 'help' and click on Ide Action"
     }
@@ -562,30 +648,125 @@ function exec(contentfile,filename) {
     const exts = filename.split(".")
     const extension = exts[exts.length -1];
     terminal_input.value+=filename+"\nf,erifn,eri   "+extension+"\n"
+    outputTextarea.value = ""
     if(extension==="js"){
         try {
-     const originalConsoleLog = console.log;
+            const originalConsoleLog = console.log;
 
-    // Rediriger console.log vers l'élément textarea
-    const outputTextarea = document.getElementById("execute_result");
-    console.log = function(...args) {
-        outputTextarea.value += args.join(" ") + "\n";
-    };
+            // Rediriger console.log vers l'élément textarea
+            const outputTextarea = document.getElementById("execute_result");
+            console.log = function(...args) {
+                outputTextarea.value += args.join(" ") + "\n";
+            };
 
-    // Exécuter le script
-    const executeScript = new Function(contentfile);
-    executeScript();
+            // Exécuter le script
+            const executeScript = new Function(contentfile);
+            executeScript();
 
-    // Restaurer la console originale
-    console.log = originalConsoleLog;
+            // Restaurer la console originale
+            console.log = originalConsoleLog;
         } catch (error) {
             window.getElementById("execute_result").value += "\nErreur d'exécution du script : " + error.message + "\n";
-            
+
         }
     }
     else if(extension==="html"){
         shell.openItem(filename);
     }
+}
+
+async function Credent(){
+    const div = document.getElementById('fullscreenDiv');
+    div.classList.toggle('active');
+    toggleFullScreen(document.getElementById('fullscreenDiv'));
+    const username = document.getElementById("identifiant");
+    const pasword = document.getElementById("motDePasse");
+    document.getElementById('save_cred').addEventListener('click', async function () {
+        try {
+            const result = await Set_credentials(username.value, pasword.value);
+            if (result) {
+                div.classList.remove('active');
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                }
+            } else {
+                console.log('Failed to set credentials');
+            }
+        } catch (error) {
+            console.error('Error setting credentials:', error);
+        }
+    });
+}
+function Color_Bold(list_to_color) {
+    const fileList = document.getElementById('fileList');
+    const buttons = fileList.getElementsByTagName('button');
+
+    for (const button of buttons) {
+        if (list_to_color.includes(button.innerHTML)) {
+            terminal_input.value+=button.innerHTML+" yes\n"
+            button.style.color = 'red';
+            button.style.fontWeight = 'bold';
+        } else {
+            terminal_input.value+=button.innerHTML+" nop\n"
+            button.style.color = 'black';
+            button.style.fontWeight = 'normal';
+        }
+    }
+    terminal_input.value+=list_to_color
+}
+
+
+function getType(obj) {
+    if (Array.isArray(obj)) {
+      return 'Array';
+    } else if (obj instanceof Date) {
+      return 'Date';
+    } else if (obj instanceof Function) {
+      return 'Function';
+    } else if (obj === null) {
+      return 'null';
+    } else if (obj === undefined) {
+      return 'undefined';
+    } else if (typeof obj === 'object') {
+      return 'Object';
+    } else {
+      return typeof obj;
+    }
+  }
+//AnySearch
+async  function AnySearch(word){
+    try {
+
+
+            const response = await fetch('http://localhost:8080/api/Search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ current_project: current_project, commit: word })
+            });
+            const result = await response.text();
+            if (response.ok) {
+                //const resultModified = result.replace(/\\/g, "\\\\");
+                //terminal_input.value += "\n" + resultModified;
+                const listA = JSON.parse(result);
+                terminal_input.value += '\n' + "We've found the word in "+listA.length+" files "+getType(listA)+"\n"
+                let index = 0;
+// for (let element of listA) {
+//  terminal_input.value+=`Element at index ${index} is of type: ${typeof element}\n`;
+//   index++;
+// }
+                if(listA.length > 0){
+                    Color_Bold(listA);
+                }
+
+            } else {
+                terminal_input.value += "\nresss" + result + "\n";
+            }
+    } catch (error) {
+        terminal_input.value += "\nerr" + error + "\n";
+    }
+
 }
 // actions
 document.addEventListener('DOMContentLoaded', async () => {
@@ -614,8 +795,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const tag_mess = document.getElementById("tag_message")
         //tag si il y a un messag dans tag
         if(tag_mess.value!==""  )
-            await GitTag();
+            await GitTag(tag_mess.value);
         await GitPush();
+    });
+    Pull_Button.addEventListener('click', async function () {
+        await GitPull();
     });
     execute.addEventListener('click', async function () {
         //tag si il y a un messag dans tag
@@ -623,62 +807,98 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     //Raccourcis
-    document.addEventListener('keydown', function (event) {
+    document.addEventListener('keydown', async  function (event) {
         //Sauvegarde le fichier actuel dans CodeWindow
-        if (event.ctrlKey && event.key === 'S') {
+        if (event.ctrlKey && event.key === 'S'||event.ctrlKey && event.key === 's') {
             const path = filename.innerHTML;
             const content = code_display.value;
             UpdateFile(path, content);
         }
+        if (event.ctrlKey && event.key === 'G'||event.ctrlKey && event.key === 'g') {
+            Credent();
+        }
         //Supprime le fichier actuel de Code Window
-        if (event.ctrlKey && event.key === 'D') {
+        if (event.ctrlKey && event.key === 'D'||event.ctrlKey && event.key === 'd') {
             event.preventDefault();
             const path = filename.innerHTML;
             DeleteFile(path)
         }
-        //ouvre en grand CodeWindow
-        if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+        //any search
+        if (event.ctrlKey && event.key === 'F'||event.ctrlKey && event.key === 'f') {
             event.preventDefault();
-            toggleFullScreen(codepanel);
+            const div = document.getElementById('Option');
+            div.classList.toggle('active');
+            toggleFullScreen(document.getElementById('Option'));
+            document.getElementById("search_button").addEventListener('click', async function(){
+                const word = document.getElementById("word_searchh");
+                terminal_input.value+="alooor"
+                await AnySearch(word.value);
+                terminal_input.value+=word.value
+                div.classList.remove('active');
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                    terminal_input.value+="sssssalooor"
+                }
+            })
+  
         }
         //sort du plein écran
         if (event.key === 'Escape') {
             exitFullScreen();
         }
+        //ouvre en grand CodeWindow
+        if (event.ctrlKey && event.shiftKey && event.key === 'C'||event.ctrlKey && event.shiftKey && event.key === 'c') {
+            event.preventDefault();
+            toggleFullScreen(codepanel);
+        }
+        //ouvre en grand ArchiWindow
+        if (event.ctrlKey && event.shiftKey && event.key === 'A'||event.ctrlKey && event.shiftKey && event.key === 'a') {
+            event.preventDefault();
+            toggleFullScreen(archipanel);
+        }
+        //ouvre en grand ExecutionWindow
+        if (event.ctrlKey && event.shiftKey && event.key === 'R'||event.ctrlKey && event.shiftKey && event.key === 'r') {
+            event.preventDefault();
+            toggleFullScreen(archipanel);
+        }
         //ouvre en grand Terminal Window
-        if (event.ctrlKey && event.shiftKey && event.key === 'T') {
+        if (event.ctrlKey && event.shiftKey && event.key === 'T' || event.ctrlKey && event.shiftKey && event.key === 't') {
             event.preventDefault();
             toggleFullScreen(terminalpanel);
         }
         //Ouvre en grand Shortcuts window
-        if (event.ctrlKey && event.shiftKey && event.key === 'S') {
+        if (event.ctrlKey && event.shiftKey && event.key === 'S'||event.ctrlKey && event.shiftKey && event.key === 's') {
             event.preventDefault();
             toggleFullScreen(shortcutspanel);
         }
         //ferme le fichier actuel dans Code Window
-        if (event.ctrlKey && event.key === 'K') {
+        if (event.ctrlKey && event.key === 'K' || event.ctrlKey && event.key === 'k') {
             event.preventDefault();
             CloseFile();
         }
         //shortcut for the IDE_Button
-        if (event.ctrlKey && event.altKey && event.key === 'I'){
+        if (event.ctrlKey && event.altKey && event.key === 'I'|| event.ctrlKey && event.altKey && event.key === 'i'){
             event.preventDefault();
             ideButton.click();
         }
         //shortcut for Execute_Button
-        if (event.ctrlKey && event.altKey && event.key === 'E'){
+        if (event.ctrlKey && event.altKey && event.key === 'E'||event.ctrlKey && event.altKey && event.key === 'e'){
             event.preventDefault();
-            shell.click();
+            shell_ici.click();
         }
         //shortcut for Push
-        if (event.ctrlKey && event.altKey && event.key === 'P'){
+        if (event.ctrlKey && event.altKey && event.key === 'P'||event.ctrlKey && event.altKey && event.key === 'p'){
             event.preventDefault();
             Push_Button.click();
         }
         //shortcut for commit
-        if (event.ctrlKey && event.altKey && event.key === 'M'){
+        if (event.ctrlKey && event.altKey && event.key === 'M'||event.ctrlKey && event.altKey && event.key === 'm'){
             event.preventDefault();
             Commit_Button.click();
+        }
+        if (event.ctrlKey && event.altKey && event.key === 'L'||event.ctrlKey && event.altKey && event.key === 'l'){
+            event.preventDefault();
+            Pull_Button.click();
         }
     });
 
@@ -689,26 +909,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     //Si il n'y a pas de crédentials de renseignés, les demandes
     if (!cred) {
-        const div = document.getElementById('fullscreenDiv');
-        div.classList.toggle('active');
-        toggleFullScreen(document.getElementById('fullscreenDiv'));
-        const username = document.getElementById("identifiant");
-        const pasword = document.getElementById("motDePasse");
-        document.getElementById('save_cred').addEventListener('click', async function () {
-            try {
-                const result = await Set_credentials(username.value, pasword.value);
-                if (result) {
-                    div.classList.remove('active');
-                    if (document.fullscreenElement) {
-                        await document.exitFullscreen();
-                    }
-                } else {
-                    console.log('Failed to set credentials');
-                }
-            } catch (error) {
-                console.error('Error setting credentials:', error);
-            }
-        });
+        await Credent();
     }
 
 });

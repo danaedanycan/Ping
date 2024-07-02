@@ -205,7 +205,7 @@ abstract public class GitCommand implements Feature {
             return feedback;
         }
 
-        tagCommand.setName(tagName);
+        tagCommand.setName(tagName).setAnnotated(true).setMessage("Tagging version " + tagName);
         try {
             tagCommand.call();
         } catch (GitAPIException e) {
@@ -216,6 +216,7 @@ abstract public class GitCommand implements Feature {
 
         return feedback;
     }
+
     protected Feedback gitCommit(Project project, Object... params) throws IOException, GitAPIException {
         Feedback feedback = new Feedback();
         feedback.setValid(true);

@@ -17,22 +17,17 @@ public class AnySearch implements Feature {
 
     @Override
     public ExecutionReport execute(Project project, Object... params) {
-        List<Node> res = new ArrayList<>();
+        List<String> res = new ArrayList<>();
         List<Integer> nb_occ = new ArrayList<>();
         for (Object param : params) {
             Fill_index(res, nb_occ, project.getRootNode().getPath().toString(), param.toString());
         }
-        Feedback result = new Feedback();
-        if (!res.isEmpty()) {
-            result.setter_valid();
-            result.set_files(res);
-            result.set_nbocc(nb_occ);
-        }
+
         SearchFeatureReport FinalRes = new SearchFeatureReport(res, !res.isEmpty());
         return FinalRes;
     }
 
-    private void Fill_index(List<Node> res, List<Integer> nb_occ, String project, String param) {
+    private void Fill_index(List<String> res, List<Integer> nb_occ, String project, String param) {
         File base = new File(project);
         File[] files = base.listFiles();
         for (File value : files) {
@@ -52,25 +47,22 @@ public class AnySearch implements Feature {
                     }
                     if (is_here > 0) {
                         if (isHere(res, value.getPath()))
-                            res.add(new FileNode(Path.of(value.getPath())));
+                            res.add((value.getPath()));
                         nb_occ.add(is_here);
                     }
-
-                } catch (NotAFileException | NotAFolderException e) {
-                    Logger.log("Problem in adding a new file in the indexer: " + e);
                 } catch (FileNotFoundException e) {
-                    throw new RuntimeException(e);
+                    Logger.logError(e.toString());
                 }
             }
         }
 
     }
 
-    private boolean isHere(List<Node> res, String path) {
+    private boolean isHere(List<String> res, String path) {
 
         boolean result = true;
-        for (Node node : res) {
-            if (node.getPath().toString().equals(path)) {
+        for (String node : res) {
+            if (node.equals(path)) {
                 return false;
             }
 

@@ -27,7 +27,13 @@
 
           <button id="save_cred" class="rounded-button pink-button">Save</button>
         </div>
-
+        <div id="Option" class="fullscreen" >
+          <p>Quel mot voulez-vous chercher ?</p>
+          <label for="word_search">Mot à Chercher :</label>
+          <input type="text" id="word_searchh" name="word_search">
+          
+          <button id="search_button" class="rounded-button pink-button">Search</button>
+        </div>
         <div id="run-configs" class="grid-item run-configs">
           <h2 class="section-title">RUN CONFIGS</h2>
           <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
@@ -63,9 +69,10 @@
         <div id="git" class="grid-item git">
           <h2 class="section-title">GIT</h2>
           <button class="rounded-button blue-button read-screen-button-top">READ SCREEN</button>
-          <div id="buttonContainer" class="folders text-left">
+          <div id="buttonContainer" class="folder-container">
 
           </div>
+    
           <div class="commit-message mt-4">
             
           </div>
@@ -75,8 +82,10 @@
             <textarea id = "tag_message" placeholder="TAG MESSAGE(optional)" class="w-full p-2 border"></textarea>
           </div>
           <div class="flex justify-between mt-4">
-            <button id="push_button"class="rounded-button blue-button">PUSH</button>
             <button id="commit_button"class="rounded-button blue-button">COMMIT</button>
+            <button id="push_button"class="rounded-button blue-button">PUSH</button>
+            <button id="pull_button"class="rounded-button blue-button">PULL</button>
+
           </div>
         </div>
         <div id="shortcuts" class="grid-item shortcuts text-center">

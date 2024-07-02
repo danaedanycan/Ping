@@ -10,12 +10,12 @@ import java.util.List;
  * @param searchResult All file node where the query have been found.
  * @param isSuccess  Is the report successful.
  */
-public record SearchFeatureReport(@NotNull List<Node> searchResult, boolean isSuccess) implements Feature.ExecutionReport {
-    public List<Node> getResults() {
+public record SearchFeatureReport(@NotNull List<String> searchResult, boolean isSuccess) implements Feature.ExecutionReport {
+    public List<String> getResults() {
         if(isSuccess)
             return searchResult;
 
-        throw new RuntimeException("FIXME");
+        return null;
     }
 }
 

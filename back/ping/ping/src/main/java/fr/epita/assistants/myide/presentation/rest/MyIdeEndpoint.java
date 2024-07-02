@@ -3,9 +3,11 @@ package fr.epita.assistants.myide.presentation.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.epita.assistants.myide.domain.entity.CoreProject;
+import fr.epita.assistants.myide.domain.entity.Features.Any.AnySearch;
 import fr.epita.assistants.myide.domain.entity.Features.Feedback;
 import fr.epita.assistants.myide.domain.entity.Features.Git.*;
 import fr.epita.assistants.myide.domain.entity.classes.Credentials;
+import fr.epita.assistants.myide.domain.entity.report.SearchFeatureReport;
 import fr.epita.assistants.myide.domain.service.Git.AddClass;
 import fr.epita.assistants.myide.domain.service.Git.CommitClass;
 import fr.epita.assistants.myide.domain.service.Projects;
@@ -19,6 +21,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +86,40 @@ public class MyIdeEndpoint {
             }
         }
     }
+    @POST
+    @Path("/Search")
+    public Response Search(String project_path) {
 
+        System.out.println(project_path);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            CommitClass projectData = objectMapper.readValue(project_path, CommitClass.class);
+            String currentProject = projectData.getCurrent_project();
+            String word = projectData.getCommit();
+            Projects test = new Projects();
+            CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(currentProject));
+            if(proj != null ) {
+                AnySearch search = new AnySearch();
+                SearchFeatureReport res  = (SearchFeatureReport) search.execute(proj,word);
+                if(res.getResults()!=null){
+                    System.out.println(res.getResults().toString());
+                    return Response.ok(res.getResults()).build();
+
+                }
+                else {
+                    return Response.ok("[]").build();
+                }
+
+            }
+            return Response.ok("[]")
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(400, "impossible")
+                    .build();
+        }
+    }
     @POST
     @Path("/set/credentials")
     public Response Set_credentials(String Jsonobj) {
@@ -91,7 +127,15 @@ public class MyIdeEndpoint {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             Credentials credentials = objectMapper.readValue(Jsonobj, Credentials.class);
-            credentials.writeToFile(filePath);
+
+            if(credentials.getKey()=="" &&credentials.getUsername()==""){
+                BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath), StandardOpenOption.TRUNCATE_EXISTING);
+
+            }
+            else {
+                credentials.writeToFile(filePath);
+            }
+
             return Response.ok().build();
 
         } catch (Exception e) {
@@ -399,26 +443,55 @@ public class MyIdeEndpoint {
 
         System.out.println(project_path);
 
-            Projects test = new Projects();
-            CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(project_path));
-            if(proj != null && proj.hasAspect(GitAspect.class)) {
-                GitPush gitCommit = new GitPush();
-                Feedback commit_feedback = (Feedback) gitCommit.execute(proj);
-                if(commit_feedback.isSuccess()){
-                    System.out.println("iciiiii");
-                    return Response.ok().build();
-
-                }
-                else{
-
-                    System.out.println("errreureepush");
-                    return Response.status(400, "impossible")
-                            .build();
-                }
+        Projects test = new Projects();
+        CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(project_path));
+        if(proj != null && proj.hasAspect(GitAspect.class)) {
+            GitPush gitCommit = new GitPush();
+            Feedback commit_feedback = (Feedback) gitCommit.execute(proj);
+            if(commit_feedback.isSuccess()){
+                System.out.println("iciiiii");
+                return Response.ok().build();
 
             }
-            return Response.ok()
-                    .build();
+            else{
+
+                System.out.println("errreureepush");
+                return Response.status(400, "impossible")
+                        .build();
+            }
+
+        }
+        return Response.ok()
+                .build();
+
+
+    }
+    @POST
+    @Path("/execFeature/Gitpull")
+    public Response GitPull(String project_path){
+
+        System.out.println(project_path);
+
+        Projects test = new Projects();
+        CoreProject proj = (CoreProject) test.load(java.nio.file.Path.of(project_path));
+        if(proj != null && proj.hasAspect(GitAspect.class)) {
+            GitPull gitCommit = new GitPull();
+            Feedback commit_feedback = (Feedback) gitCommit.execute(proj);
+            if(commit_feedback.isSuccess()){
+                System.out.println("iciiiii");
+                return Response.ok().build();
+
+            }
+            else{
+
+                System.out.println("errreureepush");
+                return Response.status(400, "impossible")
+                        .build();
+            }
+
+        }
+        return Response.ok()
+                .build();
 
 
     }
